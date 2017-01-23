@@ -1,0 +1,210 @@
+# all completed by myself, Thomas Norman. SID: 4984724. Please bear in mind that i got an extension unstill the 23rd of January.
+
+from random import randint, sample
+from itertools import chain, combinations
+import time
+
+class SSP():
+	def __init__(self, S=[], t=0):
+		 # initialises an object  with the name self
+		giving it the empty array s, variable t which is set to 0, the
+		variable n which is the length of the array s, decision which is false
+		total which is 0 and selected which is an empty array. 
+
+		self.S = S
+		self.t = t
+		self.n = len(S)
+		#
+		self.decision = False
+		self.total    = 0
+		self.selected = []
+
+	def __repr__(self):
+		# This is how we want to print the object initialised above
+		return "SSP instance: S="+str(self.S)+"\tt="+str(self.t)
+
+	def random_instance(self, n, bitlength=10):
+		# sets the value of the max the bit number can be, which is 2^length of the bitlength-1
+		we then sort the array and get a random number between 0 and the max bit
+		we then get a random number between 0 and the max bit times n and then set the length of the array to n 
+		max_n_bit_number = 2**bitlength-1
+		self.S = sorted( [ randint(0,max_n_bit_number) for i in range(n) ] , reverse=True)
+		self.t = randint(0,n*max_n_bit_number)
+		self.n = len( self.S )
+
+	def random_yes_instance(self, n, bitlength):
+		# This function is similar to the function above, except instead of random numbers
+		it uses a sum of sample, which means that t will always be a number that is a sum
+		of a sample of numbers in the array, making sure it is always possible to complete
+		max_n_bit_number = 2**bitlength-1
+		self.S = sorted( [ randint(0,max_n_bit_number) for i in range(n) ] , reverse=True)
+		self.t = sum( sample(self.S, randint(0,n)) )
+		self.n = len( self.S )
+
+	###
+	def try_at_random(self):
+		# This function tries a random sample until it finds a sum that works
+		candidate = []
+		total = 0
+		while total != self.t:
+			candidate = sample(self.S, randint(0,self.n))
+			total     = sum(candidate)
+			print( "Trying: ", candidate, ", sum:", total 
+
+
+
+        
+
+#Exhaustive Search
+
+               def exhaustive(self):
+		# This function sets up a power set, which is a 2d array which contains each subset 
+		s = self.S # sets variable s to the same value as the set S dervied from random yes instance
+		power_set=[[]]
+		j = 0
+		for elem in s: # Loops the length of the array s
+			for sub_set in power_set: # Loops for each possible subset beginning with a certain instance
+				power_set=power_set+[list(sub_set)+[elem]] # Creates a new subset and adds it to the 2d array
+				result = [sum(power_set[i]) for i in range(len(power_set))] # creates a results list which is the sum of each powerset
+				# loops through each result, if a result is true, the function will end and return true
+				for j in range(len(result)):
+					if result[j] == self.t:
+						return True
+		return False
+
+
+
+
+
+#Dynamic Search
+
+
+
+         def dynamic_programming(self):
+
+        #Initializes the array with the apporpriate amount of elements
+        dsearch = [False]*(self.t+1 )
+        #The first element is set to True
+        dsearch[0] = True
+        
+        x = 0
+        #The while loop runs based on an fail state in this case
+        while not dsearch[self.t] and x < self.n:
+            #Every time x is incremented the value of L is set to the next value of the set
+            L = self.S[x]
+            #The target_sum gets reset because it's changed in the next while loop.
+            target_sum = self.t
+            #This while loop also runs based on a fail state
+            #In this case the loop runs as long as the target_sum is less or equal to the L value
+            while not dsearch[self.t] and target_sum >= L:
+                if not dsearch[target_sum] and dsearch[target_sum - L]:
+                    dsearch[target_sum] = True
+                target_sum -= 1
+            x += 1
+        
+        #Returns the outcome
+        return dsearch[self.t]
+
+#Greedy Search
+
+	def greedy(self, greedyList=[]):
+		""" This function performs a greedy search to get a subset with a total
+		close to t, but does not gurantee success """
+		greedyList=[]
+		s = sorted(list(self.S), reverse=True) # sorts and reveres the set
+		n = len(s) # n is set to be the length of the array
+		total = 0
+		for i in range(0, n): # n is set to be the length of the array
+			# if the current total + the next number in the array is less than the total, add it to the total, otherwise move on
+			if total+s[i] <= self.t:
+				total = total + s[i]
+				greedyList.append(s[i])
+			# if the total of the greedy list equals the target, break the loop early.
+			if sum(greedyList) == self.t:
+				break
+		return greedyList
+
+#GREEDY RANDOM SORT
+
+
+def greedyRandom(self, greedyList=[]):
+		""" Similar to a greedy search, but instead of going through the list in order,
+		we go through the list at random, checking if the next random number can fit into the subset """
+		greedyList=[]
+		s = sorted(list(self.S), reverse=True) # sorts and reveres the set
+		n = len(s) # n is set to be the length of the array
+		total = 0
+		for i in range(0, n): # n is set to be the length of the array
+			randomNo = random.choice(s) # gets a random number from s
+			# if the current total + the random number is less than the total, add it to the total, otherwise move on
+			if total+randomNo <= self.t:
+				total = total + randomNo
+				greedyList.append(randomNo)
+				s.remove(randomNo) # remove the random number from the original array to make sure it won't be picked again
+				n = len(s) # update the value of n
+			# if the total of the greedy list equals the target, break the loop early.
+			if sum(greedyList) == self.t:
+				break
+		return greedyList
+
+
+
+
+
+#Grasp Search
+
+def grasp(self, solution=0):
+		""" This function uses the list gotten from the random greedy function and replaces a random
+		number with another random number. We check if it's closer to the target and repeat the process
+		a set number of times """
+		s = list(self.S) # sets s to be the set
+		n = len(s) # sets n to be the length of the set
+		best_solution = 0
+		solution = self.greedyRandom() # sets solution to be the list gotten from the random greedy instance
+		neighbourhood = [x for x in s if x not in solution] # gets a list of numbers from around s that werent used in solution
+		best_solution = sum(solution) # sets the inital best solution as the sum of solution
+		if best_solution == 0: # if the subset was empty return the best solution
+			return best_solution
+		for i in range(0, 100): # loops from 0 to 100, can be changed to suit needs
+			greedy_candidate = list(solution) # sets greedy_candidate to be a list of solution
+			random_number = random.choice(greedy_candidate) # gets a random number from the greedy_candidate list
+			greedy_candidate.remove(random_number) # remove a random number from the greedy candidate
+			if not neighbourhood: # if neighbourhood is empty there will be no replacement numbers, so return best_solution
+				return best_solution
+			else:
+				# Get a random number from the neighbourhood, if the sum of that and the greedy_candidate is better than the
+				# current best_solution, set this to the new best_solution
+				greedy_candidate.append(random.choice(neighbourhood))
+				if abs(self.t - sum(greedy_candidate)) < abs(self.t - best_solution):
+					#print("changing best solution from ", best_solution, "to ", sum(greedy_candidate))
+					best_solution = sum(greedy_candidate)
+			if best_solution == self.t:
+					break
+		return best_solution
+
+
+#Iterative
+
+    lis = sorted(self.S,reverse=True) #Sorts list large to small
+		solution = [] #array for solution
+		currentBest = [] #array current best solution
+		for i in range(0, len(lis)): #Loop though all set values
+			choose = lis[i] #Select next value
+			if (sum(solution) + choose) <= self.t: #If solution + value <= target
+				solution.append(choose) #Add chosen value to the solution
+		currentBest = list(solution) #make solution current best solution
+		external = [x for x in lis if x not in solution] #Fill external list with all set values not in solution
+		for j in range(0,len(solution)): #Loops through the solution
+			for k in range(0,len(external)): #Loop through the external numbers
+				if len(external) = 0: #If external numbers empty
+					return currentBest #Return last best
+				test = list(solution) #Copy solution to test list
+				test[j] = external[k] #this swaps the value in test solution with external value
+				if abs(self.t - sum(test)) < abs(self.t - sum(solution)): #If new test solution is better
+					solution[j] = external[k] #Make test solution the new solution
+		if abs(self.t = sum(solution)) < abs(self.t - sum(currentBest)): #if solution is better than the best solution
+			currentBest = list(solution) #Make solution new better solution
+		del solution[:] #Empty solution list
+		return currentBest #Return best solution
+
+        
